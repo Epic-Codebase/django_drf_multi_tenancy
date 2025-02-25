@@ -14,6 +14,62 @@ A scalable **multi-tenant** system using **Django, Django Rest Framework (DRF), 
 
 ---
 
+## **Understanding Schema-Based Multi-Tenancy in Django & DRF**
+
+## **How Schema-Based Multi-Tenancy Works**
+Schema-based multi-tenancy is an approach where **each tenant (company) has its own isolated schema** in a single PostgreSQL database. This ensures **data security, isolation, and scalability** while allowing shared authentication and cross-tenant management when required.
+
+Unlike row-based multi-tenancy (where all tenants share the same tables), schema-based multi-tenancy provides:
+- **Strong Isolation** – Each company’s data exists in a separate schema.
+- **Better Performance** – Queries operate on smaller, tenant-specific tables.
+- **Easier Scaling** – Adding a new tenant means creating a new schema without affecting existing tenants.
+
+## **Multi-Tenancy Structure in Global Dealer**
+The **Global Dealer** product supports two types of customers:
+
+1. **Single-Company Customers** – One company (one schema) with multiple users.
+2. **Conglomerate Customers** – A parent organization with multiple companies (tenants), each having its own schema.
+3. **Tenant-Based Users**:
+   - **Admin Users** – Manage their specific company (tenant).
+   - **Regular Users** – Belong to a specific company.
+
+### **Schema Design Example**
+Here’s an example of how PostgreSQL schemas will be structured:
+
+```
+public (shared schema)
+│── tenants (stores metadata about all tenants)
+│── users (shared authentication system)
+│
+├── company_1 (tenant schema)
+│   ├── projects
+│   ├── orders
+│   ├── invoices
+│
+├── company_2 (tenant schema)
+│   ├── projects
+│   ├── orders
+│   ├── invoices
+│
+├── company_3 (tenant schema)
+│   ├── projects
+│   ├── orders
+│   ├── invoices
+```
+
+Each **tenant schema** (`company_1`, `company_2`, etc.) contains the same **isolated tables**. The `public` schema holds **shared tables**, like user authentication.
+
+## **Handling Tenant Routing in Django**
+To manage multi-tenancy, Django will dynamically **switch schemas based on the request**. This is done using middleware that detects the tenant from the request domain and activates the corresponding schema.
+
+**Example Middleware Flow:**
+1. User requests `company1.globaldealer.com`.
+2. Middleware identifies `company1` as the tenant.
+3. Django switches to the `company_1` schema.
+4. The request is processed using `company_1`'s data.
+
+
+
 ## 🛠 Installation
 
 ### 1️⃣ Clone the Repository
